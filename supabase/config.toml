@@ -1,0 +1,7 @@
+project_id = "bejiwrlcolypgtmxqxva"
+
+[functions.auth-signup]
+verify_jwt = false
+
+[functions.auth-signin]
+verify_jwt = false
