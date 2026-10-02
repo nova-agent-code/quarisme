@@ -36,6 +36,9 @@ yarn-error.log*
 # supabase CLI local state
 supabase/.temp/
 
+# android APK project (build locally)
+android/
+
 # vercel
 .vercel
 
