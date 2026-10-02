@@ -1,0 +1,22 @@
+[
+    {
+        "merged": "com.quarisme.app-debug-24:/mipmap-anydpi-v26_ic_launcher.xml.flat",
+        "source": "com.quarisme.app-main-26:/mipmap-anydpi-v26/ic_launcher.xml"
+    },
+    {
+        "merged": "com.quarisme.app-debug-24:/layout_activity_main.xml.flat",
+        "source": "com.quarisme.app-main-26:/layout/activity_main.xml"
+    },
+    {
+        "merged": "com.quarisme.app-debug-24:/drawable_ic_launcher_background.xml.flat",
+        "source": "com.quarisme.app-main-26:/drawable/ic_launcher_background.xml"
+    },
+    {
+        "merged": "com.quarisme.app-debug-24:/mipmap-anydpi-v26_ic_launcher_round.xml.flat",
+        "source": "com.quarisme.app-main-26:/mipmap-anydpi-v26/ic_launcher_round.xml"
+    },
+    {
+        "merged": "com.quarisme.app-debug-24:/drawable_ic_launcher_foreground.xml.flat",
+        "source": "com.quarisme.app-main-26:/drawable/ic_launcher_foreground.xml"
+    }
+]

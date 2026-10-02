@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">QuarisMe</string>
+    <style name="Theme.QuarisMe" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:statusBarColor">#4f46e5</item>
+        <item name="android:navigationBarColor">#4f46e5</item>
+    </style>
+</resources>
