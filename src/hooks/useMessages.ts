@@ -11,7 +11,7 @@ export function useMessages(
   conversationId: string | null,
   recipientId: string | null,
   currentUserId: string,
-  otherUserName: string,
+  otherUserName: string | null,
 ) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);

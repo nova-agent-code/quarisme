@@ -12,7 +12,7 @@ import { getSupabase } from "@/lib/supabase/client";
 export default function HomePage() {
   const { user, mounted } = useAuth();
   const router = useRouter();
-  const { conversations, loading: conversationsLoading, refresh } = useConversations();
+  const { conversations, loading: conversationsLoading, refresh, createGroup } = useConversations();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [mobileView, setMobileView] = useState<"list" | "chat">("list");
 
@@ -47,16 +47,24 @@ export default function HomePage() {
     [refresh],
   );
 
+  const handleCreateGroup = useCallback(
+    async (groupName: string, memberIds: string[]): Promise<string> => {
+      const conversationId = await createGroup(groupName, memberIds);
+      return conversationId;
+    },
+    [createGroup],
+  );
+
   if (!user) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950">
+      <div className="flex min-h-dvh items-center justify-center bg-slate-50 dark:bg-slate-950">
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent" />
       </div>
     );
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-950">
+    <div className="flex h-dvh overflow-hidden bg-slate-50 dark:bg-slate-950">
       <div
         className={`w-full shrink-0 md:w-80 ${
           mobileView === "chat" ? "hidden md:block" : "block"
@@ -68,6 +76,7 @@ export default function HomePage() {
           selectedId={selectedId}
           onSelect={handleSelect}
           onAddConnection={handleAddConnection}
+          onCreateGroup={handleCreateGroup}
         />
       </div>
 
@@ -82,7 +91,11 @@ export default function HomePage() {
             otherUserId={otherUser.id}
             otherDisplayName={otherUser.displayName}
             currentUserId={user.id}
+            isGroup={selected.is_group}
+            groupName={selected.group_name}
+            memberCount={selected.member_count}
             onBack={() => setMobileView("list")}
+            onGroupChanged={refresh}
           />
         ) : (
           <div className="hidden h-full md:flex">

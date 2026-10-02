@@ -27,6 +27,20 @@ export function useConversations() {
     setLoading(false);
   }, []);
 
+  const createGroup = useCallback(
+    async (groupName: string, memberIds: string[]): Promise<string> => {
+      const supabase = getSupabase();
+      const { data, error } = await supabase.rpc("create_group", {
+        p_group_name: groupName,
+        p_member_ids: memberIds,
+      });
+      if (error) throw new Error("Failed to create group.");
+      await refresh();
+      return data as string;
+    },
+    [refresh],
+  );
+
   useEffect(() => {
     mounted.current = true;
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -57,5 +71,5 @@ export function useConversations() {
     };
   }, [refresh]);
 
-  return { conversations, loading, error, refresh };
+  return { conversations, loading, error, refresh, createGroup };
 }

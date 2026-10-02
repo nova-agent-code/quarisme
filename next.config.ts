@@ -1,11 +1,10 @@
 import type { NextConfig } from "next";
+import path from "path";
 
 const nextConfig: NextConfig = {
-  output: 'export',
-  basePath: '/quarisme',
-  assetPrefix: '/quarisme',
-  images: {
-    unoptimized: true,
+  allowedDevOrigins: ["192.168.100.102"],
+  turbopack: {
+    root: path.resolve("."),
   },
 };
 

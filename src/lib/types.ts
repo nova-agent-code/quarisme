@@ -9,14 +9,25 @@ export type Profile = {
 
 export type ConversationSummary = {
   conversation_id: string;
-  other_user_id: string;
-  other_display_name: string;
+  is_group: boolean;
+  other_user_id: string | null;
+  other_display_name: string | null;
   other_avatar_url: string | null;
+  group_name: string | null;
+  group_avatar_url: string | null;
+  member_count: number;
   last_message_id: string | null;
   last_message_content: string | null;
   last_message_sender_id: string | null;
   last_message_created_at: string | null;
   unread_count: number;
+};
+
+export type GroupMember = {
+  user_id: string;
+  display_name: string;
+  avatar_url: string | null;
+  role: "admin" | "member";
 };
 
 export type Message = {

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Avatar, EmptyState, Skeleton } from "./shared";
 import { SettingsPanel } from "./SettingsPanel";
+import { CreateGroupModal } from "./CreateGroupModal";
 import { useUserSearch } from "@/hooks/useUserSearch";
 import { useAuth } from "@/providers/auth";
 import type { ConversationSummary } from "@/lib/types";
@@ -25,12 +26,14 @@ export function Sidebar({
   selectedId,
   onSelect,
   onAddConnection,
+  onCreateGroup,
 }: {
   conversations: ConversationSummary[];
   loading: boolean;
   selectedId: string | null;
   onSelect: (id: string) => void;
   onAddConnection: (otherUserId: string) => Promise<string>;
+  onCreateGroup: (groupName: string, memberIds: string[]) => Promise<string>;
 }) {
   const { user, signOut } = useAuth();
   const router = useRouter();
@@ -39,6 +42,7 @@ export function Sidebar({
   const [addingId, setAddingId] = useState<string | null>(null);
   const [addError, setAddError] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [groupModalOpen, setGroupModalOpen] = useState(false);
 
   async function handleAdd(otherUserId: string) {
     setAddingId(otherUserId);
@@ -61,6 +65,11 @@ export function Sidebar({
     router.refresh();
   }
 
+  async function handleCreateGroup(groupName: string, memberIds: string[]) {
+    const conversationId = await onCreateGroup(groupName, memberIds);
+    onSelect(conversationId);
+  }
+
   return (
     <div className="flex h-full w-full flex-col border-r border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
       <div className="border-b border-slate-100 px-4 py-4 dark:border-slate-800">
@@ -79,6 +88,17 @@ export function Sidebar({
           aria-label="Search people"
           className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 outline-none focus:border-indigo-400 focus:bg-white focus:ring-2 focus:ring-indigo-100 dark:bg-slate-800 dark:text-slate-100"
         />
+        <button
+          onClick={() => setGroupModalOpen(true)}
+          className="mt-2 flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-slate-300 py-2 text-sm font-medium text-slate-600 transition-colors hover:border-indigo-400 hover:text-indigo-600 dark:border-slate-600 dark:text-slate-400 dark:hover:border-indigo-500 dark:hover:text-indigo-400"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+            <path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2" />
+            <circle cx="9" cy="7" r="4" />
+            <path d="M19 8v6M22 11h-6" />
+          </svg>
+          Create Group
+        </button>
         {query.trim() && (
           <div className="mt-2">
             {searching && <Skeleton className="mb-2 h-12 w-full" />}
@@ -136,11 +156,14 @@ export function Sidebar({
                       : "hover:bg-slate-50 dark:hover:bg-slate-800"
                   }`}
                 >
-                  <Avatar name={c.other_display_name} id={c.other_user_id} />
+                  <Avatar
+                    name={c.is_group ? (c.group_name ?? "Group") : (c.other_display_name ?? "")}
+                    id={c.is_group ? c.conversation_id : (c.other_user_id ?? "")}
+                  />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-baseline justify-between gap-2">
                       <span className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
-                        {c.other_display_name}
+                        {c.is_group ? (c.group_name ?? "Group") : (c.other_display_name ?? "")}
                       </span>
                       <span className="shrink-0 text-xs text-slate-400 dark:text-slate-500">
                         {formatTime(c.last_message_created_at)}
@@ -191,6 +214,12 @@ export function Sidebar({
         </div>
       )}
       {settingsOpen && <SettingsPanel onClose={() => setSettingsOpen(false)} />}
+      {groupModalOpen && (
+        <CreateGroupModal
+          onClose={() => setGroupModalOpen(false)}
+          onCreate={handleCreateGroup}
+        />
+      )}
     </div>
   );
 }

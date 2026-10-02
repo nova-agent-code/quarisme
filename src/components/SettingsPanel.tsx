@@ -1,9 +1,42 @@
 "use client";
 
+import { useState } from "react";
+import { getSupabase } from "@/lib/supabase/client";
 import { useTheme } from "@/providers/theme";
+import { useAuth } from "@/providers/auth";
+import { validateDisplayName } from "@/lib/validation";
 
 export function SettingsPanel({ onClose }: { onClose: () => void }) {
   const { theme, toggle } = useTheme();
+  const { user } = useAuth();
+  const [editingName, setEditingName] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [savingName, setSavingName] = useState(false);
+  const [nameError, setNameError] = useState<string | null>(null);
+
+  async function handleSaveName() {
+    setNameError(null);
+    const validationError = validateDisplayName(newName);
+    if (validationError) {
+      setNameError(validationError);
+      return;
+    }
+    setSavingName(true);
+    try {
+      const supabase = getSupabase();
+      const { error } = await supabase.functions.invoke("update-profile", {
+        body: { displayName: newName.trim() },
+      });
+      if (error) throw new Error("Request failed.");
+      await supabase.auth.refreshSession();
+      setEditingName(false);
+      setNewName("");
+    } catch {
+      setNameError("Failed to update display name. Please try again.");
+    } finally {
+      setSavingName(false);
+    }
+  }
 
   return (
     <div
@@ -29,48 +62,117 @@ export function SettingsPanel({ onClose }: { onClose: () => void }) {
           </button>
         </div>
 
-        <div className="space-y-1">
-          <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
-            Appearance
-          </p>
-          <button
-            onClick={toggle}
-            className="flex w-full items-center justify-between rounded-xl px-3 py-3 text-left transition-colors hover:bg-slate-50 dark:hover:bg-slate-800"
-          >
-            <div className="flex items-center gap-3">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400">
-                {theme === "dark" ? (
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
-                  </svg>
+        <div className="space-y-4">
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+              Profile
+            </p>
+            <div className="rounded-xl px-3 py-3">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-xs text-slate-400">Display Name</p>
+                  {editingName ? (
+                    <input
+                      type="text"
+                      value={newName}
+                      onChange={(e) => setNewName(e.target.value)}
+                      autoFocus
+                      className="mt-1 w-full rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm text-slate-900 outline-none focus:border-indigo-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
+                    />
+                  ) : (
+                    <p className="mt-0.5 truncate text-sm font-medium text-slate-900 dark:text-slate-100">
+                      {user?.displayName}
+                    </p>
+                  )}
+                </div>
+                {editingName ? (
+                  <div className="flex shrink-0 gap-1">
+                    <button
+                      onClick={handleSaveName}
+                      disabled={savingName}
+                      aria-label="Save display name"
+                      className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M20 6L9 17l-5-5" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => {
+                        setEditingName(false);
+                        setNewName("");
+                        setNameError(null);
+                      }}
+                      aria-label="Cancel"
+                      className="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M18 6L6 18M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
                 ) : (
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="12" cy="12" r="4" />
-                    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
-                  </svg>
+                  <button
+                    onClick={() => {
+                      setNewName(user?.displayName ?? "");
+                      setEditingName(true);
+                      setNameError(null);
+                    }}
+                    className="shrink-0 rounded-lg px-2.5 py-1.5 text-xs font-semibold text-indigo-600 hover:bg-indigo-50 dark:text-indigo-400 dark:hover:bg-indigo-900/40"
+                  >
+                    Edit
+                  </button>
                 )}
               </div>
-              <div>
-                <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                  Dark mode
-                </p>
-                <p className="text-xs text-slate-400">
-                  {theme === "dark" ? "On" : "Off"}
-                </p>
-              </div>
+              {nameError && (
+                <p className="mt-1.5 text-xs text-red-600 dark:text-red-400">{nameError}</p>
+              )}
             </div>
-            <div
-              className={`relative h-6 w-11 rounded-full transition-colors ${
-                theme === "dark" ? "bg-indigo-600" : "bg-slate-300"
-              }`}
+          </div>
+
+          <div>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-400">
+              Appearance
+            </p>
+            <button
+              onClick={toggle}
+              className="flex w-full items-center justify-between rounded-xl px-3 py-3 text-left transition-colors hover:bg-slate-50 dark:hover:bg-slate-800"
             >
+              <div className="flex items-center gap-3">
+                <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600 dark:bg-indigo-900/40 dark:text-indigo-400">
+                  {theme === "dark" ? (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" />
+                    </svg>
+                  ) : (
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="12" cy="12" r="4" />
+                      <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+                    </svg>
+                  )}
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                    Dark mode
+                  </p>
+                  <p className="text-xs text-slate-400">
+                    {theme === "dark" ? "On" : "Off"}
+                  </p>
+                </div>
+              </div>
               <div
-                className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
-                  theme === "dark" ? "translate-x-5" : "translate-x-0.5"
+                className={`relative h-6 w-11 rounded-full transition-colors ${
+                  theme === "dark" ? "bg-indigo-600" : "bg-slate-300"
                 }`}
-              />
-            </div>
-          </button>
+              >
+                <div
+                  className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
+                    theme === "dark" ? "translate-x-5" : "translate-x-0.5"
+                  }`}
+                />
+              </div>
+            </button>
+          </div>
         </div>
       </div>
     </div>
