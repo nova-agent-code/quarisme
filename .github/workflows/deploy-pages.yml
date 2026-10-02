@@ -18,7 +18,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      NEXT_PUBLIC_BASE_PATH: /quarismme
+      NEXT_PUBLIC_BASE_PATH: /quarisme
       NODE_OPTIONS: --max-old-space-size=4096
     steps:
       - name: Checkout
